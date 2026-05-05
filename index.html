@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI课程助手 - 双脑与心理健康</title>
+  <title>AI课程助手 - 2026秋季班：双脑与心理健康</title>
   
   <!-- 引入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -83,6 +83,8 @@
     const ThumbUp = (p) => <Icon name="thumb_up" {...p} />;
     const ThumbDown = (p) => <Icon name="thumb_down" {...p} />;
     const School = (p) => <Icon name="school" {...p} />;
+    const ListIcon = (p) => <Icon name="format_list_bulleted" {...p} />;
+    const AddComment = (p) => <Icon name="add_comment" {...p} />;
 
     // ==========================================
     // 2. 核心数据模型与几何计算
@@ -226,7 +228,7 @@
 
                     {authStep === 2 && (
                     <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <p className="text-xs text-slate-500 mb-6">绑定教务信息，开启《双脑与心理健康》伴学之旅。</p>
+                        <p className="text-xs text-slate-500 mb-6">绑定教务信息，开启《2026秋季班：双脑与心理健康》伴学之旅。</p>
                         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 focus-within:border-indigo-400 focus-within:bg-indigo-50/30 transition-colors">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">真实姓名</label>
                         <input type="text" value={regData.name} onChange={e=>setRegData({...regData, name:e.target.value})} className="w-full bg-transparent text-sm font-bold text-slate-800 outline-none placeholder:font-normal" placeholder="请输入您的姓名" />
@@ -768,7 +770,7 @@
                                     <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${currentSClass}`}>{currentStatusStr}</span>
                                 </div>
                                 <div className="space-y-2.5">
-                                    <div className="flex items-center gap-2 text-[11px] text-slate-500"><div className="w-5 h-5 rounded-full bg-indigo-50 flex items-center justify-center"><Clock className="w-3 h-3 text-indigo-500" /></div><span>上课时间：今日 19:00-21:00</span></div>
+                                    <div className="flex items-center gap-2 text-[11px] text-slate-500"><div className="w-5 h-5 rounded-full bg-indigo-50 flex items-center justify-center"><Clock className="w-3 h-3 text-indigo-500" /></div><span>上课时间：10月26日 19:00-21:00</span></div>
                                     <div className="flex items-center gap-2 text-[11px] text-slate-500"><div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><MapPin className="w-3 h-3 text-blue-500" /></div>
                                         <span>现场打卡：{checkInState === 0 ? "未打卡" : (checkInState === 1 ? `${checkInTime} 签到 | 待签退` : `${checkInTime} 签到 | ${checkOutTime} 签退`)}</span>
                                     </div>
@@ -830,7 +832,7 @@
         );
     };
 
-    const AIHistoryModal = ({ onClose }) => {
+    const AIHistoryModal = ({ onClose, onNewChat }) => {
         const [detail, setDetail] = useState(null);
         const records = [
             { id: 1, query: "多巴胺与内啡肽的区别是什么？", answer: "多巴胺主要负责“期待奖赏”的兴奋感和动力，促使我们去行动；而内啡肽通常在完成挑战或高强度运动后释放，带来平静、深层的愉悦感和镇痛效果。\n\n💡 来源：《课程讲义 02》P15", time: "今天 14:30" },
@@ -860,6 +862,9 @@
                         </div>
                     ) : (
                         <div className="space-y-3 animate-in fade-in">
+                        <button onClick={onNewChat || onClose} className="w-full bg-slate-100 hover:bg-slate-200 py-3.5 rounded-[1.25rem] flex items-center justify-center gap-2 text-[14px] font-bold text-indigo-600 transition-colors mb-2 active:scale-95 border border-slate-200/50 shadow-sm">
+                            <AddComment className="w-5 h-5" /> 新建对话
+                        </button>
                         {records.map((record) => (
                             <div key={record.id} onClick={() => setDetail(record)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_4px_15px_rgb(0,0,0,0.02)] flex items-start gap-3 cursor-pointer hover:bg-slate-50 active:scale-[0.98] transition-all group">
                                 <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5 border border-indigo-100/50 group-hover:bg-indigo-100"><Brain className="w-4 h-4 text-indigo-500" /></div>
@@ -886,16 +891,6 @@
             <h2 className="text-lg font-bold text-slate-800">全部任务记录</h2>
             </div>
             <div className="flex-1 overflow-y-auto p-5 pb-20 no-scrollbar space-y-4 bg-slate-50/50">
-            
-            <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_4px_15px_rgb(0,0,0,0.02)] flex gap-3 relative overflow-hidden group cursor-pointer hover:bg-slate-50 hover:shadow-md active:scale-[0.98] transition-all">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500"></div>
-                <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0 group-hover:bg-rose-100 transition-colors"><ActivitySquare className="w-5 h-5 text-rose-500" /></div>
-                <div className="flex-1">
-                <h4 className="text-sm font-bold text-slate-800">新问卷：DASS-21 情绪测试</h4>
-                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">课程阶段性量表评测已发布，请各位同学如实填写当前情绪状态。</p>
-                <div className="flex items-center gap-1 mt-2 text-[10px] font-medium text-rose-600"><Clock className="w-3 h-3" /> 10月23日 23:59 截止</div>
-                </div>
-            </div>
 
             <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_4px_15px_rgb(0,0,0,0.02)] flex gap-3 relative overflow-hidden group cursor-pointer hover:bg-slate-50 hover:shadow-md active:scale-[0.98] transition-all">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500"></div>
@@ -936,10 +931,10 @@
                 <Heart className="w-4 h-4 text-rose-300 absolute bottom-3 right-3 z-10 animate-pulse" />
             </div>
             <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-1">AI 课程助手</h2>
-            <p className="text-xs font-bold text-indigo-500 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full mb-6">双脑与心理健康</p>
+            <p className="text-xs font-bold text-indigo-500 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full mb-6">2026秋季班：双脑与心理健康</p>
             
             <p className="text-sm text-slate-600 leading-relaxed max-w-[280px] mb-8">
-                这是一款专为《双脑与心理健康》课程打造的智能伴学系统。融合了前沿的 AI 知识问答、情绪轮盘探查、多模态体征评测与沉浸式干预资源。
+                这是一款专为《2026秋季班：双脑与心理健康》课程打造的智能伴学系统。融合了前沿的 AI 知识问答、情绪轮盘探查、多模态体征评测与沉浸式干预资源。
             </p>
 
             <div className="w-full bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-left space-y-4">
@@ -1034,7 +1029,7 @@
         { short: "神经可塑性", q: "神经可塑性是什么意思？", a: "神经可塑性是指大脑在经历新经验、学习新知识或受伤后，通过重组神经网络来改变其结构和功能的能力。\n\n💡 来源：《课程讲义 01》P09" },
         { short: "皮质醇与压力", q: "皮质醇在压力反应中起什么作用？", a: "皮质醇被称为“压力荷尔蒙”，在面对压力时由肾上腺分泌，能提高血糖并抑制免疫系统以应对短期危机，但长期高水平的皮质醇会损害海马体，影响记忆和情绪。\n\n💡 来源：《课程讲义 04》P12" }
       ];
-      const [messages, setMessages] = useState([{ id: 1, role: 'ai', text: `你好 ${userInfo.name}！我是基于《双脑与心理健康》教材构建的AI助教。有关课程知识点、作业疑惑，都可以向我提问哦。`, feedback: null }]);
+      const [messages, setMessages] = useState([{ id: 1, role: 'ai', text: `你好 ${userInfo.name}！我是基于《2026秋季班：双脑与心理健康》教材构建的AI助教。有关课程知识点、作业疑惑，都可以向我提问哦。`, feedback: null }]);
       const [aiInput, setAiInput] = useState('');
       const [isStreaming, setIsStreaming] = useState(false);
       const messagesEndRef = useRef(null);
@@ -1138,9 +1133,9 @@
                   </div>
                   <div className="flex-1">
                     <h2 className="text-xl font-extrabold tracking-tight text-white mb-1 drop-shadow-sm">{userInfo.name}</h2>
-                    <div className="inline-flex items-center gap-1.5 bg-black/15 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 shadow-sm max-w-[180px]">
+                    <div className="inline-flex items-center gap-1.5 bg-black/15 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 shadow-sm max-w-full">
                       <BookOpen className="w-3.5 h-3.5 text-indigo-100 shrink-0" />
-                      <span className="text-indigo-50 text-[10px] font-bold tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">《双脑与心理健康》秋季班</span>
+                      <span className="text-indigo-50 text-[10px] font-bold tracking-wide whitespace-nowrap">2026秋季班：双脑与心理健康</span>
                     </div>
                   </div>
                 </div>
@@ -1257,7 +1252,7 @@
                      <div className="absolute top-0 right-0 w-32 h-32 bg-rose-100 rounded-full blur-3xl opacity-50"></div>
                      <School className="w-12 h-12 text-indigo-400 mb-3 drop-shadow-sm" />
                      <h4 className="text-[15px] font-black text-slate-800 tracking-tight mb-2">全部课程已圆满结束</h4>
-                     <p className="text-[11px] text-slate-500 leading-relaxed max-w-[80%]">感谢您参与《双脑与心理健康》的学习，祝前程似锦，心理常伴阳光。</p>
+                     <p className="text-[11px] text-slate-500 leading-relaxed max-w-[80%]">感谢您参与《2026秋季班：双脑与心理健康》的学习，祝前程似锦，心理常伴阳光。</p>
                   </div>
                 ) : (
                   <>
@@ -1274,7 +1269,7 @@
                         </p>
                         <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1.5 rounded-lg w-fit border shadow-sm ${attendanceScenario === 'wait' ? 'text-slate-500 bg-slate-100 border-slate-200' : 'text-indigo-600 bg-indigo-50 border-indigo-100'}`}>
                           <Clock className="w-3.5 h-3.5" /> 
-                          {attendanceScenario === 'wait' ? '10月30日 19:00 (未开始)' : '今日 19:00-21:00'}
+                          {attendanceScenario === 'wait' ? '10月30日 19:00 (未开始)' : '10月26日 19:00-21:00'}
                         </div>
                       </div>
                     </div>
@@ -1321,7 +1316,7 @@
                             : 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/25 border-indigo-400/50 active:scale-95'
                         }`}
                       >
-                        <MessageSquare className="w-4 h-4" /> {attendanceScenario === 'ended' ? '进入互动间 (回看)' : '进入课程互动间'}
+                        <MessageSquare className="w-4 h-4" /> {attendanceScenario === 'ended' ? '进入互动间 (回看)' : '进入课堂互动间'}
                       </button>
                     </div>
                   </>
@@ -1351,20 +1346,6 @@
                       </div>
                     ) : (
                       <>
-                        <div onClick={() => showToast('即将跳转至问卷详情')} className="bg-white rounded-xl p-4 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-rose-100/50 relative overflow-hidden group cursor-pointer hover:shadow-md active:scale-[0.98] transition-all">
-                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500"></div>
-                          <div className="flex justify-between items-center pl-2">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="bg-rose-100 text-rose-600 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">问卷</span>
-                                <span className="text-rose-500 text-[10px] flex items-center gap-0.5 font-medium"><Clock className="w-3 h-3" /> 10月23日 23:59 截止</span>
-                              </div>
-                              <p className="font-bold text-slate-800 text-sm mt-1">DASS-21 情绪测试</p>
-                            </div>
-                            <button className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-lg shadow-rose-500/30 active:scale-95 transition-all flex items-center gap-0.5 pointer-events-none">去完成 <ChevronRight className="w-3.5 h-3.5" /></button>
-                          </div>
-                        </div>
-
                         <div onClick={() => showToast('即将跳转至作业详情')} className="bg-white rounded-xl p-4 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-teal-100/50 relative overflow-hidden group cursor-pointer hover:shadow-md active:scale-[0.98] transition-all">
                           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-500"></div>
                           <div className="flex justify-between items-center pl-2">
@@ -1440,19 +1421,16 @@
 
         return (
           <div className="flex flex-col h-full bg-[#f8fafc] pb-32 animate-in fade-in relative">
-            <div className="bg-white/80 backdrop-blur-xl pt-14 pb-4 px-5 shadow-sm sticky top-0 z-20 border-b border-slate-100 flex items-center justify-between relative">
-              <button onClick={() => setShowHistoryModal(true)} className="text-indigo-600 text-[14px] font-bold active:scale-95 transition-all relative z-10 py-1 px-2 -ml-2 rounded-md hover:bg-indigo-50">
-                记录
-              </button>
-              <div className="absolute inset-x-0 bottom-4 flex justify-center pointer-events-none">
-                <div className="flex items-center gap-2">
+            <div className="bg-white/80 backdrop-blur-xl pt-14 pb-3 px-5 shadow-sm sticky top-0 z-20 border-b border-slate-100 relative">
+              <div className="flex items-center justify-between relative h-8">
+                <button onClick={() => setShowHistoryModal(true)} className="text-indigo-600 flex items-center justify-center active:scale-95 transition-all relative z-10 w-8 h-8 -ml-1 rounded-full hover:bg-indigo-50" title="AI 问答记录">
+                  <ListIcon className="w-6 h-6" />
+                </button>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <h2 className="font-extrabold text-slate-800 text-[15px] tracking-tight">AI课程助教</h2>
-                  <div className="text-[9px] text-emerald-600 font-bold flex items-center gap-1 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-md">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>教材RAG已连接
-                  </div>
                 </div>
+                <div className="w-8 relative z-10"></div>
               </div>
-              <div className="w-10 relative z-10"></div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar">
@@ -1572,8 +1550,11 @@
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1 mt-2">AI心理评估</h3>
-                  <div onClick={() => setActiveHealthTask('multimodal')} className="relative h-32 rounded-3xl overflow-hidden group cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.08)] mt-2">
+                  <div className="flex justify-between items-center mb-3 px-1 mt-2">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI心理评估</h3>
+                    <button onClick={() => setShowAssessmentHistoryModal(true)} className="text-[11px] text-indigo-600 font-bold bg-indigo-50/80 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors flex items-center gap-0.5 active:scale-95">历史报告 <ChevronRight className="w-3 h-3" /></button>
+                  </div>
+                  <div onClick={() => setActiveHealthTask('multimodal')} className="relative h-32 rounded-3xl overflow-hidden group cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
                       <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80" alt="Tech" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-indigo-900/60 mix-blend-multiply"></div>
                       <div className="absolute inset-0 p-5 flex flex-col justify-center text-white z-10">
@@ -1660,9 +1641,8 @@
 
               <div className="space-y-4">
                 <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-100 overflow-hidden p-5">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center mb-4">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Activity className="w-4 h-4 text-indigo-500" />心理健康 & 学习指标</h3>
-                    <button onClick={() => setShowAssessmentHistoryModal(true)} className="text-[10px] text-indigo-500 font-bold flex items-center gap-0.5 hover:bg-indigo-50 px-2 py-1 rounded-md transition-colors">历史报告 <ChevronRight className="w-3 h-3" /></button>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="bg-blue-50/50 rounded-2xl p-3 flex flex-col items-center justify-center border border-blue-100/50">
@@ -1787,7 +1767,10 @@
               {showCalendarModal && <CalendarModal onClose={() => setShowCalendarModal(false)} confirmedEmotion={confirmedEmotion} />}
               {showAttendanceModal && <AttendanceHistoryModal onClose={() => setShowAttendanceModal(false)} checkInState={checkInState} checkInTime={checkInTime} checkOutTime={checkOutTime} />}
               {showAssessmentHistoryModal && <AssessmentHistoryModal onClose={() => setShowAssessmentHistoryModal(false)} />}
-              {showHistoryModal && <AIHistoryModal onClose={() => setShowHistoryModal(false)} />}
+              {showHistoryModal && <AIHistoryModal onClose={() => setShowHistoryModal(false)} onNewChat={() => {
+                  setMessages([{ id: 1, role: 'ai', text: `你好 ${userInfo.name}！我是基于《2026秋季班：双脑与心理健康》教材构建的AI助教。有关课程知识点、作业疑惑，都可以向我提问哦。`, feedback: null }]);
+                  setShowHistoryModal(false);
+              }} />}
               {showTaskHistoryModal && <TaskHistoryModal onClose={() => setShowTaskHistoryModal(false)} />}
               {showAboutModal && <AboutModal onClose={() => setShowAboutModal(false)} />}
               {showVersionModal && <VersionModal onClose={() => setShowVersionModal(false)} />}
