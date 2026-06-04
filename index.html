@@ -449,6 +449,147 @@
         )
     };
 
+    // 考勤打卡页面 (还原设计图)
+    const CheckInModal = ({ onClose, checkInState, setCheckInState, checkInTime, setCheckInTime, checkOutTime, setCheckOutTime, showToast, userInfo }) => {
+        const [isScanning, setIsScanning] = useState(false);
+        const [inRange, setInRange] = useState(true);
+
+        const handlePunch = () => {
+            if (!inRange) return showToast("当前不在打卡范围内");
+            setIsScanning(true);
+            setTimeout(() => {
+                setIsScanning(false);
+                const now = new Date();
+                const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                if (checkInState === 0) {
+                    setCheckInState(1);
+                    setCheckInTime(timeStr);
+                    showToast("签到成功！祝你上课愉快");
+                } else if (checkInState === 1) {
+                    setCheckInState(2);
+                    setCheckOutTime(timeStr);
+                    showToast("签退成功！辛苦了");
+                }
+            }, 1000);
+        };
+
+        const toggleLocation = () => {
+            setInRange(!inRange);
+            showToast(inRange ? "已模拟离开打卡范围" : "已模拟进入打卡范围");
+        };
+
+        return (
+            <div className="absolute inset-0 z-50 bg-[#f8fafc] flex flex-col animate-in slide-in-from-bottom-full duration-300">
+                {/* 顶部导航 */}
+                <div className="pt-14 pb-4 px-5 flex items-center justify-between shrink-0 relative z-20">
+                    <div className="flex items-center gap-4">
+                        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-slate-600 active:scale-95">
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+                        <h2 className="text-[17px] font-extrabold text-slate-800 tracking-wide">课程考勤</h2>
+                    </div>
+                    <button onClick={toggleLocation} className="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg active:scale-95">
+                        模拟定位
+                    </button>
+                </div>
+
+                <div className="flex-1 relative flex flex-col items-center pt-8 overflow-hidden">
+                    {/* 背景大圆 */}
+                    <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[150%] aspect-square bg-white rounded-full -z-10 shadow-[0_0_60px_rgba(0,0,0,0.02)]"></div>
+
+                    {/* 用户信息 */}
+                    <div className="flex flex-col items-center mb-12">
+                        <div className="w-20 h-20 rounded-full bg-white p-1 shadow-sm mb-3">
+                            <img src={userInfo?.avatar || "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=250&q=80"} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                        </div>
+                        <h2 className="text-xl font-extrabold text-slate-800 tracking-tight mb-2">{userInfo?.name || '张子涵'}</h2>
+                        <span className="text-[11px] font-bold text-slate-500 bg-white border border-slate-100 px-4 py-1.5 rounded-full shadow-sm">
+                            {userInfo?.studentId || '2023001'} · {userInfo?.major || '软件工程系'}
+                        </span>
+                    </div>
+
+                    {/* 打卡大按钮区域 */}
+                    <div className="relative mb-auto mt-4">
+                        {/* 涟漪动画 */}
+                        {!isScanning && checkInState !== 2 && inRange && (
+                            <>
+                                <div className="absolute inset-0 bg-indigo-500/20 rounded-full animate-ping" style={{ animationDuration: '3s' }}></div>
+                                <div className="absolute inset-[-20px] bg-indigo-500/10 rounded-full animate-ping" style={{ animationDuration: '3s', animationDelay: '1s' }}></div>
+                            </>
+                        )}
+                        
+                        <button 
+                            onClick={handlePunch}
+                            disabled={isScanning || checkInState === 2 || !inRange}
+                            className={`relative w-48 h-48 rounded-full flex flex-col items-center justify-center transition-all duration-300 shadow-xl ${
+                                !inRange ? 'bg-slate-300 shadow-slate-300/50 cursor-not-allowed' :
+                                checkInState === 2 ? 'bg-emerald-500 shadow-emerald-500/50 cursor-default' : 
+                                'bg-gradient-to-b from-indigo-400 to-indigo-600 shadow-indigo-500/50 hover:scale-[1.02] active:scale-95'
+                            }`}
+                        >
+                            {isScanning ? (
+                                <div className="animate-spin rounded-full h-10 w-10 border-4 border-white/30 border-t-white"></div>
+                            ) : checkInState === 2 ? (
+                                <>
+                                    <CheckCircle2 className="w-10 h-10 text-white mb-2" />
+                                    <span className="text-2xl font-black text-white tracking-widest">已完成</span>
+                                    <span className="text-[10px] text-white/80 mt-1 font-medium">今日考勤打卡完成</span>
+                                </>
+                            ) : (
+                                <>
+                                    <ScanLine className="w-6 h-6 text-white/80 mb-2" />
+                                    <span className="text-[32px] font-black text-white tracking-[0.2em] ml-2 leading-none drop-shadow-md">
+                                        {checkInState === 0 ? '签 到' : '签 退'}
+                                    </span>
+                                    <span className="text-[11px] text-white mt-3 font-bold opacity-90 tracking-widest">
+                                        {checkInState === 0 ? '课程开始打卡' : '课程结束打卡'}
+                                    </span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* 底部信息卡片 */}
+                    <div className="w-full px-5 pb-8 relative z-20 mt-auto">
+                        <div className="bg-white rounded-[1.5rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-4 flex divide-x divide-slate-100">
+                            <div className="flex-1 flex flex-col items-center justify-center">
+                                <span className="text-[11px] font-bold text-slate-400 mb-3 tracking-widest">签到时间</span>
+                                {checkInTime ? (
+                                    <span className="text-2xl font-black text-slate-800 tracking-tight">{checkInTime}</span>
+                                ) : (
+                                    <span className="text-2xl font-black text-slate-300 tracking-widest">-- : --</span>
+                                )}
+                            </div>
+                            <div className="flex-1 flex flex-col items-center justify-center">
+                                <span className="text-[11px] font-bold text-slate-400 mb-3 tracking-widest">签退时间</span>
+                                {checkOutTime ? (
+                                    <span className="text-2xl font-black text-slate-800 tracking-tight">{checkOutTime}</span>
+                                ) : (
+                                    <span className="text-2xl font-black text-slate-300 tracking-widest">-- : --</span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-[1.25rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${inRange ? 'bg-emerald-50' : 'bg-slate-50'}`}>
+                                    <MapPin className={`w-4 h-4 ${inRange ? 'text-emerald-500' : 'text-slate-400'}`} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 mb-0.5 tracking-widest">当前打卡范围要求</p>
+                                    <p className="text-[13px] font-black text-slate-800">紫金港校区 东1B-211</p>
+                                </div>
+                            </div>
+                            <span className={`text-[11px] font-bold px-3 py-1.5 rounded-lg shrink-0 ${inRange ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                                {inRange ? '在范围内' : '未在范围'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const LiveRoomModal = ({ onClose, userInfo }) => {
         const [chatMessages, setChatMessages] = useState([
             { id: 1, sender: 'AI助教', content: '欢迎来到第五讲：成瘾的脑环路！同学们可以在公屏交流互动和提问！', role: 'admin', msg_type: 'text' },
@@ -750,7 +891,7 @@
                   {/* 添加 onClick 事件作为暗门，点击标题直接跳过等待 */}
                   <h3 onClick={() => { if(status !== 'processing') setStatus('done'); }} className="text-xl font-bold text-white mb-2 cursor-pointer select-none">{step === 3 ? '3. 中性朗读 (30秒)' : '4. 情绪与状态自述 (60秒)'}</h3>
                   <p className="text-xs text-blue-200 mb-6 text-center max-w-[280px] opacity-80">
-                     {step === 3 ? '请注视镜头，以正常语速朗读下方文案！' : '请注视镜头，简要描述您近期的学习压力、最让您开心或焦虑的一件事。'}
+                     {step === 3 ? '请注视镜头，以正常语速描述！' : '请注视镜头，以正常语速描述！'}
                   </p>
                   
                   <div className="relative w-52 h-72 rounded-[2rem] overflow-hidden bg-slate-900 border-[6px] border-slate-800 shadow-2xl mb-6">
@@ -803,7 +944,7 @@
                   {step === 4 && (
                     <div className="bg-white/10 p-4 rounded-2xl border border-white/20 w-[85%] text-left shadow-sm flex items-center gap-2">
                        <Smile className="w-6 h-6 text-emerald-300 shrink-0" />
-                       <p className="text-xs text-white/90 leading-relaxed">不必紧张，像和朋友聊天一样，随意说说近况即可。</p>
+                       <p className="text-xs text-white/90 leading-relaxed">“请说说过去24小时里，哪件事对你的学习或生活状态影响最大？它让你的状态发生了什么变化？你现在回想起来是什么感受？”</p>
                     </div>
                   )}
                 </div>
@@ -1430,7 +1571,7 @@
                     <h4 className="text-sm font-bold text-slate-800">多模态情绪评估</h4>
                     <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded font-bold">已完成</span>
                 </div>
-                <p className="text-xs text-slate-500 leading-relaxed">完成本周期的情绪状态评测与数据采集。</p>
+                <p className="text-xs text-slate-500 leading-relaxed">完成本周期的情绪状态评估。</p>
                 <div className="flex items-center gap-1 mt-2 text-[10px] font-medium text-slate-400"><Clock className="w-3 h-3" /> 10月29日 10:30 完成</div>
                 </div>
             </div>
@@ -1842,6 +1983,7 @@
            if (attendanceScenario === 'none') return;
            if (attendanceScenario === 'wait') showToast('课程尚未开始，请耐心等待');
            else if (attendanceScenario === 'ended' || attendanceScenario === 'finished') showToast('当前课程考勤通道已关闭');
+           else if (checkInState === 2) setShowAttendanceModal(true);
            else setShowCheckInModal(true);
         };
         const handleLiveRoomClick = () => {
@@ -2081,7 +2223,7 @@
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="bg-blue-100 text-blue-600 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">周期评测</span>
-                                <span className="text-slate-400 text-[10px] flex items-center gap-0.5 font-medium"><Clock className="w-3 h-3" /> 10月28日 23:59 截止</span>
+                                <span className="text-slate-400 text-[10px] flex items-center gap-0.5 font-medium"><Clock className="w-3 h-3" /> 本周内完成</span>
                               </div>
                               <p className="font-bold text-slate-800 text-sm mt-1">多模态情绪评估</p>
                             </div>
@@ -2529,6 +2671,7 @@
               {showLiveRoomModal && <LiveRoomModal onClose={() => setShowLiveRoomModal(false)} userInfo={userInfo} />}
               {activeHealthTask === 'multimodal' && <MultimodalAssessmentModal onClose={() => setActiveHealthTask(null)} userInfo={userInfo} confirmedEmotion={confirmedEmotion} />}
               {showCalendarModal && <CalendarModal onClose={() => setShowCalendarModal(false)} confirmedEmotion={confirmedEmotion} />}
+              {showCheckInModal && <CheckInModal onClose={() => setShowCheckInModal(false)} checkInState={checkInState} setCheckInState={setCheckInState} checkInTime={checkInTime} setCheckInTime={setCheckInTime} checkOutTime={checkOutTime} setCheckOutTime={setCheckOutTime} showToast={showToast} userInfo={userInfo} />}
               {showAttendanceModal && <AttendanceHistoryModal onClose={() => setShowAttendanceModal(false)} checkInState={checkInState} checkInTime={checkInTime} checkOutTime={checkOutTime} />}
               {showCourseProgressModal && <CourseProgressModal onClose={() => setShowCourseProgressModal(false)} />}
               {showAssessmentHistoryModal && <AssessmentHistoryModal onClose={() => setShowAssessmentHistoryModal(false)} />}
@@ -2546,6 +2689,9 @@
               
               {/* 音频播放器 */}
               {activeAudioInfo && <AudioPlayerModal audioInfo={activeAudioInfo} onClose={() => setActiveAudioInfo(null)} />}
+              
+              {/* 考勤打卡弹窗 */}
+              {showCheckInModal && <CheckInModal onClose={() => setShowCheckInModal(false)} checkInState={checkInState} setCheckInState={setCheckInState} setCheckInTime={setCheckInTime} setCheckOutTime={setCheckOutTime} showToast={showToast} />}
 
               {/* 自定义情绪输入弹窗 */}
               {isInputtingCustomEmotion && (
