@@ -303,9 +303,6 @@
         );
     };
 
-    // ==========================================
-    // ⭐ 新增: 作业详情与提交弹窗 (TaskDetailModal)
-    // ==========================================
     const TaskDetailModal = ({ task, onClose, showToast }) => {
         const [submitText, setSubmitText] = useState('');
         const [isSubmitting, setIsSubmitting] = useState(false);
@@ -314,12 +311,10 @@
         const handleSubmit = () => {
             if (!submitText.trim()) return showToast("请输入作业内容或上传附件");
             setIsSubmitting(true);
-            // 模拟提交过程
             setTimeout(() => {
                 setIsSubmitting(false);
                 setIsSubmitted(true);
                 showToast("作业提交成功！");
-                // 提交成功后延迟关闭
                 setTimeout(onClose, 1200);
             }, 1500);
         };
@@ -335,7 +330,6 @@
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-5 pb-28 space-y-5 no-scrollbar">
-                    {/* 任务信息卡片 */}
                     <div className="bg-white rounded-[1.5rem] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 relative overflow-hidden">
                         <div className={`absolute top-0 left-0 w-1.5 h-full ${task.color || 'bg-indigo-500'}`}></div>
                         <div className="flex justify-between items-start mb-3 pl-2">
@@ -350,12 +344,10 @@
                         <p className="text-[13px] text-slate-500 leading-relaxed pl-2 bg-slate-50/50 p-3 rounded-xl border border-slate-50">{task.desc}</p>
                     </div>
 
-                    {/* 提交区域 */}
                     <div className="bg-white rounded-[1.5rem] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100">
                         <h4 className="text-[14px] font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <FileText className="w-4.5 h-4.5 text-indigo-500" /> 提交作业
                         </h4>
-                        
                         <textarea
                             value={submitText}
                             onChange={(e) => setSubmitText(e.target.value)}
@@ -363,8 +355,6 @@
                             placeholder="在此输入您的短文内容，或提交心得体会..."
                             className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-[13px] focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[160px] resize-none mb-4 disabled:bg-slate-100 disabled:text-slate-400 transition-all placeholder:text-slate-400"
                         ></textarea>
-                        
-                        {/* 附件上传 (Mock) */}
                         <div className="flex gap-3 mb-6">
                             <button disabled={isSubmitted} className="flex-1 py-3.5 border-2 border-dashed border-slate-200 bg-slate-50 rounded-2xl flex flex-col items-center justify-center gap-1 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition-colors disabled:opacity-50 active:scale-95">
                                 <Photo className="w-5 h-5" />
@@ -375,7 +365,6 @@
                                 <span className="text-[11px] font-bold mt-0.5">上传文档附件</span>
                             </button>
                         </div>
-
                         <button 
                             onClick={handleSubmit} 
                             disabled={isSubmitting || isSubmitted}
@@ -396,6 +385,68 @@
                 </div>
             </div>
         );
+    };
+
+    // 电子签名板组件
+    const SignaturePad = ({ onSign, onClear }) => {
+        const canvasRef = useRef(null);
+        const [isDrawing, setIsDrawing] = useState(false);
+
+        useEffect(() => {
+            const canvas = canvasRef.current;
+            if(canvas) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+            }
+        }, []);
+
+        const start = (e) => {
+            setIsDrawing(true);
+            draw(e, true);
+        };
+        const end = () => setIsDrawing(false);
+        const draw = (e, isStart = false) => {
+            if (!isDrawing && !isStart) return;
+            e.preventDefault(); // 阻止滚动
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            if (isStart) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+            onSign();
+        };
+
+        return (
+            <div className="relative mt-2">
+                <canvas 
+                    ref={canvasRef}
+                    onMouseDown={start} onMouseUp={end} onMouseLeave={end} onMouseMove={draw}
+                    onTouchStart={start} onTouchEnd={end} onTouchCancel={end} onTouchMove={draw}
+                    className="w-full h-20 bg-white/5 border border-white/20 rounded-2xl touch-none cursor-crosshair"
+                />
+                <div className="absolute top-3 left-3 text-[10px] text-white/30 pointer-events-none flex items-center gap-1.5"><Sparkles className="w-3 h-3"/> 请在此处手写签名</div>
+                <button onClick={(e) => {
+                    e.preventDefault();
+                    const ctx = canvasRef.current.getContext('2d');
+                    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                    onClear();
+                }} className="absolute bottom-3 right-3 text-[10px] bg-white/10 text-white/80 px-2.5 py-1.5 rounded-lg hover:bg-white/20 border border-white/10 transition-colors">重写</button>
+            </div>
+        )
     };
 
     const LiveRoomModal = ({ onClose, userInfo }) => {
@@ -470,72 +521,10 @@
         );
     };
 
-    // 电子签名板组件
-    const SignaturePad = ({ onSign, onClear }) => {
-        const canvasRef = useRef(null);
-        const [isDrawing, setIsDrawing] = useState(false);
-
-        useEffect(() => {
-            const canvas = canvasRef.current;
-            if(canvas) {
-                canvas.width = canvas.offsetWidth;
-                canvas.height = canvas.offsetHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
-            }
-        }, []);
-
-        const start = (e) => {
-            setIsDrawing(true);
-            draw(e, true);
-        };
-        const end = () => setIsDrawing(false);
-        const draw = (e, isStart = false) => {
-            if (!isDrawing && !isStart) return;
-            e.preventDefault(); // 阻止滚动
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const x = clientX - rect.left;
-            const y = clientY - rect.top;
-
-            if (isStart) {
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-                ctx.stroke();
-            }
-            onSign();
-        };
-
-        return (
-            <div className="relative mt-2">
-                <canvas 
-                    ref={canvasRef}
-                    onMouseDown={start} onMouseUp={end} onMouseLeave={end} onMouseMove={draw}
-                    onTouchStart={start} onTouchEnd={end} onTouchCancel={end} onTouchMove={draw}
-                    className="w-full h-20 bg-white/5 border border-white/20 rounded-2xl touch-none cursor-crosshair"
-                />
-                <div className="absolute top-3 left-3 text-[10px] text-white/30 pointer-events-none flex items-center gap-1.5"><Sparkles className="w-3 h-3"/> 请在此处手写签名</div>
-                <button onClick={(e) => {
-                    e.preventDefault();
-                    const ctx = canvasRef.current.getContext('2d');
-                    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-                    onClear();
-                }} className="absolute bottom-3 right-3 text-[10px] bg-white/10 text-white/80 px-2.5 py-1.5 rounded-lg hover:bg-white/20 border border-white/10 transition-colors">重写</button>
-            </div>
-        )
-    };
-
     // ==========================================
-    // ⭐ 重构: 8步多模态心理评估 (MultimodalAssessmentModal)
+    // ⭐ 更新: 多模态情绪评估 (MultimodalAssessmentModal)
     // ==========================================
-    const MultimodalAssessmentModal = ({ onClose, userInfo, isFirstAssessment, setIsFirstAssessment, confirmedEmotion }) => {
+    const MultimodalAssessmentModal = ({ onClose, userInfo, confirmedEmotion }) => {
         const [step, setStep] = useState(1);
         const [status, setStatus] = useState('idle'); // idle, processing, done
         const [recordTime, setRecordTime] = useState(0);
@@ -560,7 +549,6 @@
         const [studyStress, setStudyStress] = useState(null);
         const [energyLevel, setEnergyLevel] = useState(null);
         
-        // 提取情绪轮盘 SVG 数据用于 Step 5
         const slices = useMemo(() => {
             const arr = [];
             const r1 = 80, r2 = 180, r3 = 280, r4 = 390; 
@@ -650,6 +638,7 @@
             <div className="bg-white/5 p-4 rounded-2xl border border-white/10 mb-3">
                 <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-bold text-white">{label}</span>
+                    <span className="text-[10px] text-indigo-300">{desc}</span>
                 </div>
                 <div className="flex justify-between">
                     {[0,1,2,3,4,5].map(v => (
@@ -758,14 +747,8 @@
             case 4:
               return (
                 <div className="flex-1 flex flex-col items-center justify-start w-full mt-6">
-                  {/* 暗门：点击标题区域快速跳过当前步骤的倒计时 */}
-                  <h3 
-                    className="text-xl font-bold text-white mb-2 cursor-pointer select-none relative z-50"
-                    onClick={() => { if(status !== 'processing') { setStatus('done'); } }}
-                    title="点击可快速跳过"
-                  >
-                    {step === 3 ? '3. 中性朗读 (30秒)' : '4. 情绪与状态自述 (60秒)'}
-                  </h3>
+                  {/* 添加 onClick 事件作为暗门，点击标题直接跳过等待 */}
+                  <h3 onClick={() => { if(status !== 'processing') setStatus('done'); }} className="text-xl font-bold text-white mb-2 cursor-pointer select-none">{step === 3 ? '3. 中性朗读 (30秒)' : '4. 情绪与状态自述 (60秒)'}</h3>
                   <p className="text-xs text-blue-200 mb-6 text-center max-w-[280px] opacity-80">
                      {step === 3 ? '请注视镜头，以正常语速朗读下方文案！' : '请注视镜头，简要描述您近期的学习压力、最让您开心或焦虑的一件事。'}
                   </p>
@@ -829,16 +812,14 @@
               const hasConfirmed = !!confirmedEmotion;
               return (
                 <div className="flex-1 flex flex-col w-full h-full pt-6">
-                    <div className="flex flex-col items-center justify-center mb-4 shrink-0"><h3 className="text-lg font-bold text-white">5. 情绪轮盘与状态评分</h3></div>
-                    <div className="flex-1 overflow-y-auto px-6 pb-20 no-scrollbar space-y-6">
-                        
-                        {/* A. 情绪轮盘精简版 */}
+                    <div className="flex flex-col items-center justify-center mb-4 shrink-0"><h3 className="text-lg font-bold text-white">5. 情绪轮盘探查</h3></div>
+                    <div className="flex-1 overflow-y-auto px-6 pb-20 no-scrollbar">
                         {hasConfirmed ? (
-                            <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-col items-center text-center mt-2 animate-in zoom-in-95">
+                            <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex flex-col items-center text-center mt-6 animate-in zoom-in-95 mb-6">
                                 <p className="text-sm font-bold text-indigo-200 mb-6 flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4"/> 今日已完成情绪打卡，特征自动带入</p>
                                 <div className="text-7xl mb-6 drop-shadow-xl">{confirmedEmotion.core.emoji}</div>
                                 <p className="text-[10px] text-slate-400 mb-3 tracking-widest uppercase">情绪路径溯源</p>
-                                <div className="flex items-center justify-center gap-2.5 text-[13px] font-bold text-white flex-wrap mb-2">
+                                <div className="flex items-center justify-center gap-2.5 text-[13px] font-bold text-white flex-wrap mb-4">
                                     <span className="px-3 py-1.5 rounded-xl shadow-lg" style={{backgroundColor: confirmedEmotion.core.baseColor, color: confirmedEmotion.core.id==='happy'?'#000':'#fff'}}>{confirmedEmotion.core.name}</span>
                                     <span className="text-slate-500">➔</span>
                                     <span className="px-3 py-1.5 rounded-xl shadow-lg" style={{backgroundColor: confirmedEmotion.core.subColor, color: confirmedEmotion.core.id==='happy'?'#000':'#fff'}}>{confirmedEmotion.sub.name}</span>
@@ -851,10 +832,10 @@
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-white/5 p-5 rounded-3xl border border-white/10 flex flex-col items-center">
+                            <div className="bg-white/5 p-5 rounded-3xl border border-white/10 flex flex-col items-center mt-4 mb-6">
                                 <p className="text-sm font-bold text-white mb-1 flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-amber-400"/> 选定当前核心情绪</p>
-                                <p className="text-[10px] text-indigo-200 mb-2">点击轮盘区块选择</p>
-                                <div className="relative w-48 h-48 mx-auto flex items-center justify-center transition-all duration-500 mb-2">
+                                <p className="text-[10px] text-indigo-200 mb-2">点击轮盘区块溯源并选择</p>
+                                <div className="relative w-56 h-56 mx-auto flex items-center justify-center transition-all duration-500 my-4">
                                     <svg viewBox="-10 -10 820 820" className="w-full h-full drop-shadow-lg">
                                       <g transform={`rotate(${currentRotation}, 400, 400)`}>
                                         {slices.map((slice) => {
@@ -877,26 +858,27 @@
                                         })}
                                       </g>
                                       <circle cx="400" cy="400" r="75" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="4" />
-                                      {selectedEmotion && <text x="400" y="420" textAnchor="middle" fill="#000" fontSize="60" pointerEvents="none">{selectedEmotion.core.emoji}</text>}
+                                      {selectedEmotion ? <text x="400" y="420" textAnchor="middle" fill="#000" fontSize="60" pointerEvents="none">{selectedEmotion.core.emoji}</text> : <text x="400" y="420" textAnchor="middle" fill="#ccc" fontSize="30" pointerEvents="none">点选</text>}
                                     </svg>
                                 </div>
                                 {selectedEmotion && (
-                                    <div className="text-center animate-in zoom-in px-3 py-1.5 bg-black/20 rounded-full border border-white/10">
-                                        <span className="text-xs text-white font-bold tracking-wide flex items-center gap-1 flex-wrap justify-center">
+                                    <div className="text-center animate-in zoom-in px-4 py-2.5 bg-black/30 rounded-2xl border border-white/10 mt-2 w-full">
+                                        <p className="text-[10px] text-slate-400 mb-1.5 tracking-widest uppercase">已选情绪路径</p>
+                                        <div className="text-xs text-white font-bold flex items-center justify-center gap-1 flex-wrap">
                                            <span>{selectedEmotion.core.name}</span> <span className="text-slate-500">➔</span>
                                            <span>{selectedEmotion.sub.name}</span>
                                            {selectedEmotion.outer && (<><span className="text-slate-500">➔</span> <span className="text-amber-300">{selectedEmotion.outer.name}</span></>)}
-                                        </span>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         )}
 
                         {/* B-D. 学习状态评分 (0-5) */}
-                        <div className="space-y-1">
-                           {renderScorePicker("此刻学习状态", "", studyState, setStudyState)}
-                           {renderScorePicker("此刻学习压力", "", studyStress, setStudyStress)}
-                           {renderScorePicker("此刻精力水平", "", energyLevel, setEnergyLevel)}
+                        <div className="space-y-1 animate-in fade-in slide-in-from-bottom-4">
+                           {renderScorePicker("此刻学习状态", "整体效率与专注度", studyState, setStudyState)}
+                           {renderScorePicker("此刻学习压力", "感知的课业或环境负担", studyStress, setStudyStress)}
+                           {renderScorePicker("此刻精力水平", "身体及大脑的疲劳程度", energyLevel, setEnergyLevel)}
                         </div>
                     </div>
                 </div>
@@ -1024,7 +1006,7 @@
           if (step === 2) return (basicInfo.gender && basicInfo.age) ? "继续下一步" : "请完善基本信息";
           if (step === 3) return status === 'processing' ? `录制中 (${recordTime}s)` : status === 'done' ? "完成，进入下一步" : "开始朗读";
           if (step === 4) return status === 'processing' ? `录制中 (${recordTime}s)` : status === 'done' ? "完成，进入下一步" : "开始自述";
-          if (step === 5) return (confirmedEmotion || selectedEmotion) && studyState !== null && studyStress !== null && energyLevel !== null ? "确认并继续下一步" : "请完成评分并选择情绪";
+          if (step === 5) return ((confirmedEmotion || selectedEmotion) && studyState !== null && studyStress !== null && energyLevel !== null) ? "确认并继续下一步" : "请选择情绪并完成状态评分";
           if (step === 6 && dassIndex < dassQuestions.length) return "请完成当前量表题目";
           if (step === 7) return status === 'idle' ? "提交信息" : "确认提交";
           if (step === 8) return status === 'processing' ? "数据分析中..." : "完成并关闭";
@@ -1035,7 +1017,7 @@
             if (step === 1 && !hasSignature) return true;
             if (step === 2 && (!basicInfo.gender || !basicInfo.age)) return true;
             if ((step === 3 || step === 4) && status === 'processing') return true;
-            if (step === 5 && (!(confirmedEmotion || selectedEmotion) || studyState === null || studyStress === null || energyLevel === null)) return true;
+            if (step === 5 && (!confirmedEmotion && !selectedEmotion || studyState === null || studyStress === null || energyLevel === null)) return true;
             if (step === 6 && dassIndex < dassQuestions.length) return true;
             if (step === 8 && status === 'processing') return true;
             return false;
@@ -1073,360 +1055,47 @@
         );
     };
 
-    const CalendarModal = ({ onClose, confirmedEmotion }) => {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth();
-        let firstDayOfWeek = new Date(year, month, 1).getDay();
-        firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; 
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        let recordCount = 0;
-        for(let i = 1; i <= daysInMonth; i++) {
-            const isT = i === today.getDate();
-            if (isT && confirmedEmotion) recordCount++;
-            else if (!isT && generateMockEmotion(year, month, i)) recordCount++;
-        }
-
-        return (
-            <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-full duration-300">
-                <div className="pt-14 pb-4 px-5 flex items-center gap-4 border-b border-slate-100 shrink-0">
-                <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><ArrowLeft className="w-5 h-5" /></button>
-                <h2 className="text-lg font-bold text-slate-800">情绪记录日历</h2>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto p-5 pb-20 bg-slate-50/50">
-                <div className="bg-indigo-50 p-4 rounded-2xl flex items-center justify-between mb-6 border border-indigo-100 shadow-sm">
-                    <div>
-                    <p className="text-sm font-bold text-indigo-800">月度情绪基调</p>
-                    <p className="text-xs text-indigo-600 mt-1">记录 {recordCount} 天，以“平静”为主</p>
-                    </div>
-                    <div className="text-4xl">😌</div>
-                </div>
-                
-                <div className="bg-white p-5 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100">
-                    <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-sm font-black text-slate-800 tracking-wider mx-auto">{year}年 {month + 1}月</h3>
-                    </div>
-                    <div className="grid grid-cols-7 gap-y-4 gap-x-2 mb-2 text-center text-[10px] font-bold text-slate-400">
-                    <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
-                    </div>
-                    <div className="grid grid-cols-7 gap-y-3 gap-x-2">
-                    {Array.from({length: firstDayOfWeek}).map((_, i) => (<div key={`empty-${i}`} className="aspect-square"></div>))}
-                    {Array.from({length: daysInMonth}).map((_, i) => {
-                        const day = i + 1;
-                        const isToday = day === today.getDate();
-                        const record = isToday ? (confirmedEmotion ? { emo: confirmedEmotion.core.emoji, label: confirmedEmotion.core.name } : null) : generateMockEmotion(year, month, day);
-                        return (
-                        <div key={day} className={`aspect-[4/5] rounded-xl flex flex-col items-center justify-start pt-1.5 pb-1 gap-1 border transition-all ${record ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' : 'bg-slate-50/30 border-transparent'} ${isToday ? 'ring-2 ring-indigo-400 ring-offset-1' : ''}`}>
-                            <span className={`text-[10px] font-bold ${isToday ? 'text-indigo-600' : (record ? 'text-slate-700' : 'text-slate-400')}`}>{day}</span>
-                            {record ? (
-                            <div className="flex flex-col items-center gap-0.5"><span className="text-base leading-none">{record.emo}</span><span className="text-[8px] font-bold text-slate-500 tracking-tighter transform scale-90">{record.label}</span></div>
-                            ) : (<div className="flex-1 flex items-center justify-center"><div className="w-1 h-1 bg-slate-200 rounded-full"></div></div>)}
-                        </div>
-                        )
-                    })}
-                    </div>
-                </div>
-                </div>
-            </div>
-        );
-    };
-
-    const AttendanceHistoryModal = ({ onClose, checkInState, checkInTime, checkOutTime }) => {
-        const currentAttend = checkInState === 2 ? 1 : 0;
-        const totalAttend = 2 + currentAttend; 
-        const totalClasses = 16;
-
-        let currentStatusStr = "待签到";
-        let currentSClass = "text-slate-600 bg-slate-100 border-slate-200";
-        let currentIcon = <Clock className="w-3 h-3 text-white" />;
-        let currentIconBg = "bg-slate-300";
-
-        if (checkInState === 2) {
-            currentStatusStr = "完成";
-            currentSClass = "text-emerald-600 bg-emerald-50 border-emerald-100";
-            currentIconBg = "bg-emerald-500";
-            currentIcon = <CheckCircle2 className="w-3 h-3 text-white" />;
-        } else if (checkInState === 1) {
-            currentStatusStr = "待签退";
-            currentSClass = "text-blue-600 bg-blue-50 border-blue-100";
-            currentIconBg = "bg-blue-500";
-            currentIcon = <ScanLine className="w-3 h-3 text-white" />;
-        }
-
-        const historyRecords = [
-            {
-                title: "第四讲：压力反应系统",
-                status: "完成",
-                sClass: "text-emerald-600 bg-emerald-50 border-emerald-100",
-                iconBg: "bg-emerald-500",
-                icon: <CheckCircle2 className="w-3 h-3 text-white" />,
-                time: "10月22日 19:00-21:00",
-                punch: "18:50 签到 | 21:05 签退"
-            },
-            {
-                title: "第三讲：情绪与神经机制",
-                status: "早退",
-                sClass: "text-orange-600 bg-orange-50 border-orange-100",
-                iconBg: "bg-orange-500",
-                icon: <Clock className="w-3 h-3 text-white" />,
-                time: "10月15日 19:00-21:00",
-                punch: "18:50 签到 | 20:30 签退"
-            },
-            {
-                title: "第二讲：大脑结构基础",
-                status: "完成",
-                sClass: "text-emerald-600 bg-emerald-50 border-emerald-100",
-                iconBg: "bg-emerald-500",
-                icon: <CheckCircle2 className="w-3 h-3 text-white" />,
-                time: "10月08日 19:00-21:00",
-                punch: "18:55 签到 | 21:05 签退"
-            },
-            {
-                title: "第一讲：课程导论",
-                status: "缺勤",
-                sClass: "text-rose-600 bg-rose-50 border-rose-100",
-                iconBg: "bg-rose-500",
-                icon: <X className="w-3 h-3 text-white" />,
-                time: "10月01日 19:00-21:00",
-                punch: "未打卡"
-            }
-        ];
-
-        return (
-            <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-full duration-300">
-                <div className="pt-14 pb-4 px-5 flex items-center gap-4 border-b border-slate-100 shrink-0">
-                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><ArrowLeft className="w-5 h-5" /></button>
-                    <h2 className="text-lg font-bold text-slate-800">考勤打卡记录</h2>
-                </div>
-                <div className="flex-1 overflow-y-auto p-5 pb-20 bg-slate-50/50">
-                    <div className="bg-blue-50 shadow-sm p-4 rounded-2xl mb-6 border border-blue-100 relative overflow-hidden">
-                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-100/50 rounded-full blur-xl pointer-events-none"></div>
-                        <div className="flex items-center justify-between mb-3 relative z-10">
-                            <p className="text-sm font-bold text-blue-800">考勤记录</p>
-                            <div className="text-2xl font-black text-blue-600 tracking-tight">{totalAttend}<span className="text-sm text-blue-400 font-bold ml-0.5">/ {totalClasses} 次</span></div>
-                        </div>
-                        <div className="relative z-10 flex items-start gap-1.5 bg-white/60 p-2.5 rounded-xl border border-blue-100/50">
-                            <AlertCircle className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
-                            <p className="text-[11px] text-blue-600 leading-snug font-medium">统计说明：仅正常完成“签到”与“签退”的课时，才会被纳入完全出勤统计。</p>
-                        </div>
-                    </div>
-
-                    <div className="relative ml-2 pl-6">
-                        <div className="absolute left-[11px] top-4 bottom-8 w-[2px] bg-slate-200"></div>
-                        
-                        {/* 当前动态记录 (联动实际打卡状态) - 待签到时不显示 */}
-                        {checkInState !== 0 && (
-                            <div className="relative mb-8">
-                                <div className={`absolute -left-[33px] top-1 w-6 h-6 rounded-full border-4 border-slate-50 flex items-center justify-center z-10 shadow-sm ${currentIconBg}`}>
-                                    {currentIcon}
-                                </div>
-                                <div className="bg-white rounded-2xl p-4 shadow-[0_4px_15px_rgb(0,0,0,0.02)] border border-indigo-100 hover:shadow-md transition-shadow ring-1 ring-indigo-50">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h4 className="text-sm font-bold text-slate-800">第五讲：成瘾的脑环路</h4>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${currentSClass}`}>{currentStatusStr}</span>
-                                    </div>
-                                    <div className="space-y-2.5">
-                                        <div className="flex items-center gap-2 text-[11px] text-slate-500"><div className="w-5 h-5 rounded-full bg-indigo-50 flex items-center justify-center"><Clock className="w-3 h-3 text-indigo-500" /></div><span>上课时间：今日 19:00-21:00</span></div>
-                                        <div className="flex items-center gap-2 text-[11px] text-slate-500"><div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><MapPin className="w-3 h-3 text-blue-500" /></div>
-                                            <span>现场打卡：{checkInState === 1 ? `${checkInTime} 签到 | 待签退` : `${checkInTime} 签到 | ${checkOutTime} 签退`}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 历史记录渲染 */}
-                        {historyRecords.map((item, idx) => (
-                            <div key={idx} className={`relative ${idx === historyRecords.length - 1 ? '' : 'mb-8'}`}>
-                                <div className={`absolute -left-[33px] top-1 w-6 h-6 rounded-full border-4 border-slate-50 flex items-center justify-center z-10 shadow-sm ${item.iconBg}`}>{item.icon}</div>
-                                <div className={`bg-white rounded-2xl p-4 shadow-[0_4px_15px_rgb(0,0,0,0.02)] border border-slate-100 ${item.status === '缺勤' ? 'opacity-70' : 'hover:shadow-md transition-shadow'}`}>
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h4 className="text-sm font-bold text-slate-800">{item.title}</h4>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${item.sClass}`}>{item.status}</span>
-                                    </div>
-                                    <div className="space-y-2.5">
-                                        <div className="flex items-center gap-2 text-[11px] text-slate-500"><div className="w-5 h-5 rounded-full bg-amber-50 flex items-center justify-center"><Clock className="w-3 h-3 text-amber-500" /></div><span>上课时间：{item.time}</span></div>
-                                        <div className="flex items-center gap-2 text-[11px] text-slate-500"><div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center"><MapPin className="w-3 h-3 text-slate-500" /></div><span>现场打卡：{item.punch}</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const CourseProgressModal = ({ onClose }) => {
-        const syllabus = [
-            { id: 1, title: "第一讲：课程导论", status: "completed" },
-            { id: 2, title: "第二讲：大脑结构基础", status: "completed" },
-            { id: 3, title: "第三讲：情绪与神经机制", status: "completed" },
-            { id: 4, title: "第四讲：压力反应系统", status: "completed" },
-            { id: 5, title: "第五讲：成瘾的脑环路", status: "upcoming" },
-            { id: 6, title: "第六讲：记忆与遗忘", status: "upcoming" },
-            { id: 7, title: "第七讲：睡眠的神经科学", status: "upcoming" },
-            { id: 8, title: "第八讲：社交大脑", status: "upcoming" },
-            { id: 9, title: "第九讲：共情与利他行为", status: "upcoming" },
-            { id: 10, title: "第十讲：抑郁症的神经基础", status: "upcoming" },
-            { id: 11, title: "第十一讲：焦虑症的神经机制", status: "upcoming" },
-            { id: 12, title: "第十二讲：精神分裂症概论", status: "upcoming" },
-            { id: 13, title: "第十三讲：心理治疗与脑科学", status: "upcoming" },
-            { id: 14, title: "第十四讲：正念冥想的机制", status: "upcoming" },
-            { id: 15, title: "第十五讲：饮食与大脑健康", status: "upcoming" },
-            { id: 16, title: "第十六讲：期末总结与展望", status: "upcoming" },
-        ];
-
-        return (
-            <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-full duration-300">
-                <div className="pt-14 pb-4 px-5 flex items-center gap-4 border-b border-slate-100 shrink-0">
-                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200">
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
-                    <h2 className="text-lg font-bold text-slate-800">课程大纲进度</h2>
-                </div>
-                <div className="flex-1 overflow-y-auto p-5 pb-20 bg-slate-50/50">
-                    <div className="bg-indigo-50 shadow-sm p-4 rounded-2xl flex items-center justify-between mb-6 border border-indigo-100 relative overflow-hidden">
-                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-100/50 rounded-full blur-xl pointer-events-none"></div>
-                        <div className="relative z-10">
-                            <p className="text-sm font-bold text-indigo-800">整体进度</p>
-                        </div>
-                        <div className="text-2xl font-black text-indigo-600 tracking-tight relative z-10">4<span className="text-sm text-indigo-400 font-bold ml-0.5">/ 16 讲</span></div>
-                    </div>
-                    <div className="relative ml-2 pl-6">
-                        <div className="absolute left-[11px] top-4 bottom-8 w-[2px] bg-slate-200"></div>
-                        {syllabus.map((item) => {
-                            let sClass = "";
-                            let icon = null;
-                            let iconBg = "";
-                            if (item.status === 'completed') {
-                                sClass = "text-emerald-600 bg-emerald-50 border-emerald-100";
-                                iconBg = "bg-emerald-500";
-                                icon = <CheckCircle2 className="w-3 h-3 text-white" />;
-                            } else {
-                                sClass = "text-slate-400 bg-slate-50 border-slate-100";
-                                iconBg = "bg-slate-200";
-                                icon = <Lock className="w-3 h-3 text-white" />;
-                            }
-
-                            return (
-                                <div key={item.id} className={`relative mb-6`}>
-                                    <div className={`absolute -left-[33px] top-1 w-6 h-6 rounded-full border-4 border-slate-50 flex items-center justify-center z-10 shadow-sm ${iconBg}`}>
-                                        {icon}
-                                    </div>
-                                    <div className={`bg-white rounded-2xl p-4 shadow-[0_4px_15px_rgb(0,0,0,0.02)] border border-slate-100 ${item.status === 'upcoming' ? 'opacity-70' : 'hover:shadow-md transition-shadow'}`}>
-                                        <div className="flex justify-between items-center">
-                                            <h4 className={`text-sm font-bold ${item.status === 'upcoming' ? 'text-slate-500' : 'text-slate-800'}`}>{item.title}</h4>
-                                            <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${sClass}`}>
-                                                {item.status === 'completed' ? '已结课' : '未开始'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    // ==========================================
-    // ⭐ 更新: 历史报告按课程周期排列展示
-    // ==========================================
     const AssessmentHistoryModal = ({ onClose }) => {
-        const assessmentTimeline = [
-            { cycle: "第五讲周期", id: 1, type: "多模态情绪评估报告", time: "今天 10:30", state: "平稳/快乐", stateClass: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-            { cycle: "第四讲周期", id: 2, type: "多模态情绪评估报告", time: "10月22日 14:00", state: "焦虑/压力大", stateClass: "text-rose-600 bg-rose-50 border-rose-200" },
-            { cycle: "第三讲周期", id: 3, type: "多模态情绪评估报告", time: "10月15日 09:15", state: "平静/感激", stateClass: "text-blue-600 bg-blue-50 border-blue-200" },
-            { cycle: "第二讲周期", id: 4, type: "多模态情绪评估报告", time: "10月08日 11:45", state: "兴奋/渴望", stateClass: "text-amber-600 bg-amber-50 border-amber-200" },
-            { cycle: "第一讲周期", id: 5, type: "多模态情绪评估报告", time: "10月01日 16:20", state: "平静", stateClass: "text-blue-600 bg-blue-50 border-blue-200" }
+        const assessmentReports = [
+            { id: 1, type: "多模态情绪评估报告", time: "今天 10:30", period: "第五讲周期", emotion: "平稳/快乐" },
+            { id: 2, type: "多模态情绪评估报告", time: "10月22日 14:00", period: "第四讲周期", emotion: "平静" },
+            { id: 3, type: "多模态情绪评估报告", time: "10月15日 09:15", period: "第三讲周期", emotion: "焦虑" },
+            { id: 4, type: "多模态情绪评估报告", time: "10月08日 11:20", period: "第二讲周期", emotion: "快乐" },
+            { id: 5, type: "多模态情绪评估报告", time: "10月01日 16:45", period: "第一讲周期", emotion: "疲惫/平静" },
         ];
-
         return (
             <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-full duration-300">
                 <div className="pt-14 pb-4 px-5 flex items-center gap-4 border-b border-slate-100 shrink-0">
-                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600"><ArrowLeft className="w-5 h-5" /></button>
-                    <h2 className="text-lg font-bold text-slate-800">评估报告记录</h2>
+                <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors"><ArrowLeft className="w-5 h-5" /></button>
+                <h2 className="text-lg font-bold text-slate-800">评估报告记录</h2>
                 </div>
-                <div className="flex-1 overflow-y-auto p-6 pb-20 bg-slate-50/50 relative">
-                    <div className="absolute left-[39px] top-6 bottom-10 w-[2px] bg-slate-200"></div>
-                    
-                    <div className="space-y-8 relative">
-                        {assessmentTimeline.map((record) => (
-                            <div key={record.id} className="relative pl-12 group cursor-pointer">
-                                <div className="absolute left-[8px] top-1.5 w-4 h-4 rounded-full border-4 border-white bg-indigo-400 shadow-sm z-10 group-hover:scale-125 transition-transform"></div>
-                                <h3 className="text-xs font-black text-slate-400 mb-2 uppercase tracking-widest">{record.cycle}</h3>
-                                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_4px_15px_rgb(0,0,0,0.02)] group-hover:shadow-md transition-all active:scale-[0.98]">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100/50 text-indigo-500">
-                                                <Activity className="w-4 h-4" />
-                                            </div>
-                                            <h4 className="text-[13px] font-bold text-slate-800">{record.type}</h4>
-                                        </div>
-                                        <ChevronRight className="w-4 h-4 text-slate-300" />
+                <div className="flex-1 overflow-y-auto p-5 pb-20 bg-slate-50/50">
+                    <div className="relative ml-2 pl-6">
+                        <div className="absolute left-[11px] top-4 bottom-8 w-[2px] bg-slate-200"></div>
+                        {assessmentReports.map((record, idx) => (
+                            <div key={record.id} className={`relative ${idx === assessmentReports.length - 1 ? '' : 'mb-8'}`}>
+                                <div className={`absolute -left-[33px] top-1 w-6 h-6 rounded-full border-4 border-slate-50 flex items-center justify-center z-10 shadow-sm bg-indigo-500`}>
+                                    <Activity className="w-3 h-3 text-white" />
+                                </div>
+                                <div className="bg-white rounded-2xl p-4 shadow-[0_4px_15px_rgb(0,0,0,0.02)] border border-slate-100 hover:shadow-md transition-shadow group cursor-pointer">
+                                    <div className="flex justify-between items-start mb-2.5">
+                                        <h4 className="text-sm font-bold text-slate-800">{record.type}</h4>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold border text-indigo-600 bg-indigo-50 border-indigo-100`}>{record.period}</span>
                                     </div>
-                                    <div className="flex items-center justify-between mt-1">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${record.stateClass}`}>{record.state}</span>
-                                        <span className="flex items-center gap-1 text-[10px] font-medium text-slate-400"><Clock className="w-3 h-3" /> {record.time}</span>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-[11px] text-slate-600">
+                                            <div className="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center"><Smile className="w-3 h-3 text-emerald-500" /></div>
+                                            <span>情绪状况：<span className="font-bold text-slate-800">{record.emotion}</span></span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                                            <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center"><Clock className="w-3 h-3 text-slate-500" /></div>
+                                            <span>完成时间：{record.time}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </div>
-            </div>
-        );
-    };
-
-    const AIHistoryModal = ({ onClose, onNewChat }) => {
-        const [detail, setDetail] = useState(null);
-        const records = [
-            { id: 1, query: "多巴胺与内啡肽的区别是什么？", answer: "多巴胺主要负责“期待奖赏”的兴奋感和动力，促使我们去行动；而内啡肽通常在完成挑战或高强度运动后释放，带来平静、深层的愉悦感和镇痛效果。\n\n💡 来源：《课程讲义 02》P15", time: "今天 14:30" },
-            { id: 2, query: "什么是倒U型压力模型？", answer: "倒U型压力模型指出，压力与绩效之间存在倒U型的关系：适度的压力能使人的绩效达到峰值；而压力过低或过高都会导致绩效下降。\n\n💡 来源：《课程讲义 04》P08", time: "昨天 09:15" },
-            { id: 3, query: "神经环路是如何影响我们的情绪的？", answer: "情绪不仅由单一脑区决定，而是依赖复杂的神经环路（如皮层-边缘系统环路）。当环路连接增强或减弱时，我们的情绪调节能力也会随之改变。\n\n💡 来源：《课程讲义 03》P10", time: "10月12日 22:10" }
-        ];
-
-        return (
-            <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-full duration-300">
-                <div className="pt-14 pb-4 px-5 flex items-center gap-4 border-b border-slate-100 shrink-0">
-                    <button onClick={() => detail ? setDetail(null) : onClose()} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
-                    <h2 className="text-lg font-bold text-slate-800">{detail ? '问答详情' : 'AI 问答记录'}</h2>
-                </div>
-                <div className="flex-1 overflow-y-auto p-5 pb-20 no-scrollbar bg-slate-50/50">
-                    {detail ? (
-                        <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                            <div className="flex flex-col items-end">
-                                <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-3xl rounded-tr-sm text-[13px] shadow-sm max-w-[85%] leading-relaxed">{detail.query}</div>
-                                <span className="text-[10px] text-slate-400 mt-1.5 font-medium">{detail.time}</span>
-                            </div>
-                            <div className="flex flex-col items-start">
-                                <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center mr-2 mb-1.5 shadow-inner"><Sparkles className="w-4 h-4 text-indigo-600" /></div>
-                                <div className="bg-white border border-slate-100 text-slate-700 px-4 py-3.5 rounded-3xl rounded-tl-sm text-[13px] shadow-[0_4px_15px_rgb(0,0,0,0.02)] max-w-[85%] whitespace-pre-wrap leading-relaxed">{detail.answer}</div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="space-y-3 animate-in fade-in">
-                        <button onClick={onNewChat || onClose} className="w-full bg-slate-100 hover:bg-slate-200 py-3.5 rounded-[1.25rem] flex items-center justify-center gap-2 text-[14px] font-bold text-indigo-600 transition-colors mb-2 active:scale-95 border border-slate-200/50 shadow-sm">
-                            <AddComment className="w-5 h-5" /> 新建对话
-                        </button>
-                        {records.map((record) => (
-                            <div key={record.id} onClick={() => setDetail(record)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_4px_15px_rgb(0,0,0,0.02)] flex items-start gap-3 cursor-pointer hover:bg-slate-50 active:scale-[0.98] transition-all group">
-                                <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 mt-0.5 border border-indigo-100/50 group-hover:bg-indigo-100"><Brain className="w-4 h-4 text-indigo-500" /></div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">{record.query}</p>
-                                    <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1 font-medium"><Clock className="w-3 h-3" /> {record.time}</p>
-                                </div>
-                                <ChevronRight className="w-4 h-4 text-slate-300 self-center group-hover:text-indigo-400" />
-                            </div>
-                        ))}
-                        </div>
-                    )}
                 </div>
             </div>
         );
@@ -1441,13 +1110,30 @@
             <h2 className="text-lg font-bold text-slate-800">全部任务记录</h2>
             </div>
             <div className="flex-1 overflow-y-auto p-5 pb-20 no-scrollbar space-y-4 bg-slate-50/50">
+            
+            {/* 新增的多模态情绪评估记录 */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_4px_15px_rgb(0,0,0,0.02)] flex gap-3 relative overflow-hidden group cursor-pointer hover:bg-slate-50 hover:shadow-md active:scale-[0.98] transition-all">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors"><Activity className="w-5 h-5 text-blue-500" /></div>
+                <div className="flex-1">
+                <div className="flex justify-between items-center mb-1.5">
+                    <h4 className="text-sm font-bold text-slate-800">多模态情绪评估</h4>
+                    <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded font-bold">已完成</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">完成本周期的情绪状态评测。</p>
+                <div className="flex items-center gap-1 mt-2 text-[10px] font-medium text-slate-400"><Clock className="w-3 h-3" /> 10月29日 10:30 完成</div>
+                </div>
+            </div>
 
             <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_4px_15px_rgb(0,0,0,0.02)] flex gap-3 relative overflow-hidden group cursor-pointer hover:bg-slate-50 hover:shadow-md active:scale-[0.98] transition-all">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500"></div>
                 <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center shrink-0 group-hover:bg-teal-100 transition-colors"><FileText className="w-5 h-5 text-teal-500" /></div>
                 <div className="flex-1">
-                <h4 className="text-sm font-bold text-slate-800">新作业：双脑与心理健康短文</h4>
-                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">撰写一篇探讨双脑与日常情绪管理的短文，字数不少于800字，请按时在教务系统提交。</p>
+                <div className="flex justify-between items-center mb-1.5">
+                    <h4 className="text-sm font-bold text-slate-800">新作业：双脑与心理健康短文</h4>
+                    <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded font-bold">待提交</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">撰写一篇探讨双脑与日常情绪管理的短文，字数不少于800字，请按时在教务系统提交。</p>
                 <div className="flex items-center gap-1 mt-2 text-[10px] font-medium text-teal-600"><Clock className="w-3 h-3" /> 10月28日 23:59 截止</div>
                 </div>
             </div>
@@ -1456,191 +1142,15 @@
                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
                 <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center shrink-0 group-hover:bg-indigo-100 transition-colors"><BookX className="w-5 h-5 text-indigo-500" /></div>
                 <div className="flex-1">
-                <h4 className="text-sm font-bold text-slate-800">新作业：多巴胺机制短文</h4>
-                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">简述多巴胺与内啡肽的区别，及其在日常奖赏回路中的作用机制。</p>
+                <div className="flex justify-between items-center mb-1.5">
+                    <h4 className="text-sm font-bold text-slate-800">新作业：多巴胺机制短文</h4>
+                    <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded font-bold">待提交</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">简述多巴胺与内啡肽的区别，及其在日常奖赏回路中的作用机制。</p>
                 <div className="flex items-center gap-1 mt-2 text-[10px] font-medium text-indigo-600"><Clock className="w-3 h-3" /> 10月25日 23:59 截止</div>
                 </div>
             </div>
             
-            </div>
-        </div>
-    );
-
-    const AudioPlayerModal = ({ audioInfo, onClose }) => {
-        const [isPlaying, setIsPlaying] = useState(false);
-        const [progress, setProgress] = useState(0); // 0 to 100
-        const duration = parseInt(audioInfo.time) * 60; // 假设 time 是分钟数，转换为秒
-
-        useEffect(() => {
-            let timer;
-            if (isPlaying) {
-                timer = setInterval(() => {
-                    setProgress((prev) => {
-                        if (prev >= 100) {
-                            setIsPlaying(false);
-                            return 100;
-                        }
-                        // 模拟进度增加，根据总时长计算步长
-                        return prev + (100 / duration);
-                    });
-                }, 1000);
-            }
-            return () => clearInterval(timer);
-        }, [isPlaying, duration]);
-
-        const formatTime = (seconds) => {
-            const m = Math.floor(seconds / 60);
-            const s = Math.floor(seconds % 60);
-            return `${m}:${s.toString().padStart(2, '0')}`;
-        };
-
-        const currentTime = (progress / 100) * duration;
-
-        return (
-            <div className="absolute inset-0 z-50 bg-slate-900 flex flex-col animate-in slide-in-from-bottom-full duration-500 overflow-hidden">
-                {/* 动态模糊背景 */}
-                <div 
-                    className="absolute inset-0 opacity-40 blur-3xl scale-110 bg-cover bg-center transition-all duration-1000"
-                    style={{ backgroundImage: `url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80')` }}
-                ></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-slate-900/20"></div>
-
-                <div className="pt-14 pb-4 px-5 flex items-center justify-between shrink-0 relative z-20">
-                    <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-md transition-colors">
-                        <ChevronLeft className="w-6 h-6" />
-                    </button>
-                    <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-                        <Headphones className="w-3.5 h-3.5 text-indigo-300" />
-                        <span className="text-[10px] font-bold tracking-widest uppercase text-indigo-100">正念练习</span>
-                    </div>
-                    <div className="w-10 h-10"></div> {/* 占位以保持标题居中 */}
-                </div>
-
-                <div className="flex-1 flex flex-col items-center justify-center p-8 relative z-20">
-                    {/* 专辑封面 */}
-                    <div className={`relative w-64 h-64 md:w-72 md:h-72 rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 mb-10 transition-transform duration-700 ${isPlaying ? 'scale-100 shadow-indigo-500/20' : 'scale-95 shadow-black/40'}`}>
-                        <img 
-                            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" 
-                            alt="封面" 
-                            className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-900/40 to-transparent mix-blend-overlay"></div>
-                    </div>
-
-                    {/* 文本信息 */}
-                    <div className="text-center w-full px-4 mb-10">
-                        <h2 className="text-2xl font-black text-white tracking-tight mb-2 leading-tight">{audioInfo.title}</h2>
-                        <p className="text-sm text-slate-400 font-medium">{audioInfo.desc}</p>
-                    </div>
-
-                    {/* 进度条 */}
-                    <div className="w-full max-w-[320px] mb-8">
-                        <div className="h-1.5 bg-white/20 rounded-full w-full relative cursor-pointer group" onClick={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const x = e.clientX - rect.left;
-                            setProgress((x / rect.width) * 100);
-                        }}>
-                            <div 
-                                className="absolute top-0 left-0 h-full bg-indigo-500 rounded-full"
-                                style={{ width: `${progress}%` }}
-                            >
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 bg-white rounded-full shadow border-2 border-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-center mt-2.5 px-1 text-[11px] font-bold font-mono text-slate-400 tracking-wider">
-                            <span>{formatTime(currentTime)}</span>
-                            <span>{formatTime(duration)}</span>
-                        </div>
-                    </div>
-
-                    {/* 控制按钮 */}
-                    <div className="flex items-center justify-center gap-8">
-                        <button className="text-slate-400 hover:text-white transition-colors active:scale-90">
-                            <History className="w-6 h-6 rotate-180" /> {/* 后退 */}
-                        </button>
-                        <button 
-                            onClick={() => setIsPlaying(!isPlaying)}
-                            className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all relative"
-                        >
-                            {isPlaying && <div className="absolute inset-0 rounded-full animate-ping border-2 border-indigo-400/50"></div>}
-                            {isPlaying ? <span className="material-symbols-outlined text-4xl">pause</span> : <Play className="w-10 h-10 ml-1 fill-current" />}
-                        </button>
-                        <button className="text-slate-400 hover:text-white transition-colors active:scale-90">
-                             <History className="w-6 h-6" /> {/* 前进 */}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const AboutModal = ({ onClose }) => (
-        <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-full duration-300">
-            <div className="pt-14 pb-4 px-5 flex items-center gap-4 border-b border-slate-100 shrink-0">
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200">
-                <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h2 className="text-lg font-bold text-slate-800">关于应用</h2>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center bg-slate-50/50 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-rose-500 rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-4 mt-8 relative overflow-hidden ring-4 ring-white">
-                <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
-                <Brain className="w-10 h-10 text-white drop-shadow-md z-10" />
-                <Heart className="w-4 h-4 text-rose-300 absolute bottom-3 right-3 z-10 animate-pulse" />
-            </div>
-            <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-6">AI 课程助手</h2>
-            
-            <p className="text-sm text-slate-600 leading-relaxed max-w-[280px] mb-8">
-                这是一款专为《2026秋季班：双脑与心理健康》课程打造的智能伴学系统。融合了前沿的 AI 知识问答、情绪轮盘探查、多模态体征评测与沉浸式干预资源。
-            </p>
-
-            <div className="w-full bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-left space-y-4">
-                <div className="flex justify-between items-center"><span className="text-xs text-slate-500">开发者</span><span className="text-xs font-bold text-slate-800">海思灵曦</span></div>
-                <div className="flex justify-between items-center"><span className="text-xs text-slate-500">服务条款</span><ChevronRight className="w-4 h-4 text-slate-300" /></div>
-                <div className="flex justify-between items-center"><span className="text-xs text-slate-500">隐私政策</span><ChevronRight className="w-4 h-4 text-slate-300" /></div>
-            </div>
-            </div>
-        </div>
-    );
-
-    const VersionModal = ({ onClose }) => (
-        <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-full duration-300">
-            <div className="pt-14 pb-4 px-5 flex items-center gap-4 border-b border-slate-100 shrink-0">
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200">
-                <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h2 className="text-lg font-bold text-slate-800">版本信息</h2>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5 bg-slate-50/50">
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col items-center mb-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full -z-10 opacity-50"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-50 rounded-tr-full -z-10 opacity-50"></div>
-                <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-rose-500 rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-4 relative overflow-hidden ring-4 ring-white">
-                <Brain className="w-10 h-10 text-white drop-shadow-md z-10" />
-                </div>
-                <h2 className="text-xl font-black text-slate-800">AI 课程助手</h2>
-            </div>
-
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">更新日志</h3>
-            <div className="relative border-l-2 border-indigo-100 ml-3 space-y-6 pb-4">
-                <div className="relative pl-6">
-                <div className="absolute -left-[5px] top-1 w-2 h-2 bg-indigo-500 rounded-full ring-4 ring-indigo-50"></div>
-                <h4 className="text-sm font-bold text-slate-800 mb-1">v1.5.0 <span className="text-[10px] text-indigo-500 bg-indigo-50 px-1.5 rounded ml-2">最新</span></h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                    - 全新上线了**作业详情与提交**功能！支持查看要求、输入文本、上传图片与文档附件，交互更流畅。
-                </p>
-                </div>
-                <div className="relative pl-6 opacity-70">
-                <div className="absolute -left-[5px] top-1 w-2 h-2 bg-slate-300 rounded-full ring-4 ring-slate-50"></div>
-                <h4 className="text-sm font-bold text-slate-800 mb-1">v1.4.0</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                    - 全面恢复交互逻辑与页面动效。<br/>
-                    - 优化多模态视听识别流程，整合面部与声纹采集。<br/>
-                    - AI 助教引入流式推流与防幻觉反馈机制。<br/>
-                    - 全新“课程大纲进度”追踪面板上线。
-                </p>
-                </div>
-            </div>
             </div>
         </div>
     );
@@ -1669,11 +1179,10 @@
       const [checkOutTime, setCheckOutTime] = useState(null);
       const [isEmotionCardOpen, setIsEmotionCardOpen] = useState(false);
       const [showTasks, setShowTasks] = useState(true); 
-      const [hasPendingTasks, setHasPendingTasks] = useState(true); // 默认有任务
-      const [activeTaskDetail, setActiveTaskDetail] = useState(null); // ⭐ 新增：记录当前打开的作业详情
+      const [hasPendingTasks, setHasPendingTasks] = useState(true);
+      const [activeTaskDetail, setActiveTaskDetail] = useState(null);
       
       // 多模态评估状态
-      const [isFirstAssessment, setIsFirstAssessment] = useState(true);
       const [activeAudioCategory, setActiveAudioCategory] = useState('基础呼吸');
 
       // AI 助教状态
@@ -2005,6 +1514,20 @@
                       </div>
                     ) : (
                       <>
+                        <div onClick={() => setActiveHealthTask('multimodal')} className="bg-white rounded-xl p-4 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-blue-100/50 relative overflow-hidden group cursor-pointer hover:shadow-md active:scale-[0.98] transition-all">
+                          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
+                          <div className="flex justify-between items-center pl-2">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="bg-blue-100 text-blue-600 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">周期评测</span>
+                                <span className="text-slate-400 text-[10px] flex items-center gap-0.5 font-medium"><Clock className="w-3 h-3" /> 10月28日 23:59 截止</span>
+                              </div>
+                              <p className="font-bold text-slate-800 text-sm mt-1">多模态情绪评估</p>
+                            </div>
+                            <span className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-xl shrink-0 shadow-sm pointer-events-none group-hover:bg-blue-500 group-hover:text-white transition-colors">去评测</span>
+                          </div>
+                        </div>
+
                         <div onClick={() => setActiveTaskDetail({
                             id: 1, title: "双脑与心理健康短文", type: "短文作业",
                             desc: "撰写一篇探讨双脑与日常情绪管理的短文，字数不少于800字，请结合自身经历，谈谈情绪对你生活的影响以及你的应对方式。完成后请在此处提交文档或直接输入内容。",
@@ -2170,7 +1693,7 @@
          return (
           <div className="flex-1 overflow-y-auto bg-[#f8fafc] pb-24 animate-in fade-in flex flex-col h-full no-scrollbar relative">
              <div className="bg-white/80 backdrop-blur-xl pt-14 pb-4 px-5 shadow-sm sticky top-0 z-10 shrink-0 border-b border-slate-100 flex justify-between items-center">
-                <h2 className="text-xl font-extrabold text-slate-800">AI心理健康</h2>
+                <h2 className="text-xl font-extrabold text-slate-800">AI 情绪评估</h2>
              </div>
              <div className="p-5 flex-1 overflow-y-auto no-scrollbar space-y-6">
                 
@@ -2247,7 +1770,7 @@
 
                 <div>
                   <div className="flex justify-between items-center mb-3 px-1 mt-2">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI 情绪评估</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI情绪评估</h3>
                     <button onClick={() => setShowAssessmentHistoryModal(true)} className="text-[11px] text-indigo-600 font-bold bg-indigo-50/80 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors flex items-center gap-0.5 active:scale-95">历史报告 <ChevronRight className="w-3 h-3" /></button>
                   </div>
                   <div onClick={() => setActiveHealthTask('multimodal')} className="relative h-32 rounded-3xl overflow-hidden group cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
